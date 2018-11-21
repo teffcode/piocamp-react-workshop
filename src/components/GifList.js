@@ -1,10 +1,8 @@
 import React from 'react';
 import GifItem from './GifItem';
 
-const GifList = (props) => {
-  const gifItems = props.gifs.map((image) => {
-    return <GifItem key={image.id} gif={image} />
-  });
+const GifList = ({ gifs }) => {
+  const gifItems = gifs.map(gif => <GifItem key={gif.id} gif={gif} />);
 
   return (
     <ul>{gifItems}</ul>

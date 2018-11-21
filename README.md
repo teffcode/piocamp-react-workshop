@@ -194,10 +194,10 @@ Ahora, creemos el componente `GifItem.js` en la carpeta components y le añadimo
 ```
 import React from 'react';
 
-const GifItem = (image) => {
+const GifItem = ({ gif }) => {
   return (
     <li>
-      <img src={image.gif.url} />
+      <img src={gif.url} />
     </li>
   )
 };
@@ -209,10 +209,8 @@ Después, crearemos un componente llamado `GifList.js` en la carpeta components 
 import React from 'react';
 import GifItem from './GifItem';
 
-const GifList = (props) => {
-  const gifItems = props.gifs.map((image) => {
-    return <GifItem key={image.id} gif={image} />
-  });
+const GifList = ({ gifs }) => {
+  const gifItems = gifs.map(gif => <GifItem key={gif.id} gif={gif} />);
 
   return (
     <ul>{gifItems}</ul>
@@ -270,3 +268,78 @@ export default App;
 En nuestro navegador, veremos:
 
 <img src="./src/assets/screen2.png" alt="feak data"/>
+
+## Consumiendo la API de Giphy
+
+La API base es `http://api.giphy.com/v1/gifs/search?q=`. Después de ese `?q=` le debemos escribir el nombre del gif que queremos y adicionalmente nuestra API HEY con `&api_key=`. La API KEY pública es `dc6zaTOxFJmzC` así que nuestro endpoint si queremos buscar gatos, quedaría así:
+
+`http://api.giphy.com/v1/gifs/search?q=gatos&api_key=dc6zaTOxFJmzC`
+
+Y, para hacer los llamados usaremos una librería llamada [axios](https://github.com/axios/axios). Lo que debemos hacer para hacer uso de ella es instalarla en nuestro proyecto con el comando: `npm install axios`.
+
+Después de haber instalado axios en nuestro proyecto, debemos importarla en App.js en la parte superior así: `import axios from 'axios';` y añadimos en nuestra función `handleTermChange()` lo siguiente:
+```
+handleTermChange(term) {
+    const url = `http://api.giphy.com/v1/gifs/search?q=${term}&api_key=dc6zaTOxFJmzC`;
+    
+    axios.get(url)
+      .then(function (response) {
+        // handle success
+        console.log(response);
+      })
+}
+```
+Ve a tu navegador y asegurate que te salga ese `console.log` con la respuesta de la API al hacer cualquier busqueda en el SearchBar. Adicionalmente, quitaremos los datos falsos que le habíamos puesto en nuestro state y simplemente colocaremos:
+```
+constructor() {
+    super();
+
+    this.state = {
+        gifs: []
+    }
+}
+```
+Después de esto, añadiremos a nuestra función `handleTermChange()` lo siguiente:
+```
+handleTermChange(term) {
+    const url = `http://api.giphy.com/v1/gifs/search?q=${term.replace(/\s/g, '+')}&api_key=dc6zaTOxFJmzC`;
+
+    request.get(url, (err, res) => {
+        this.setState({ gifs: res.body.data })
+    });
+}
+```
+Y si lo corremos...
+
+<img src="./src/assets/screen3.png" alt="error" />
+😭😭😭
+
+Pero, no te preocupes. Él tiene toda la razón. Lo que debemos hacer es un Binding en el Constructor o podemos usar las *arrow functions*. Así que nuestra función quedaría:
+```
+handleTermChange = term => {
+    const url = `http://api.giphy.com/v1/gifs/search?q=${term}&api_key=dc6zaTOxFJmzC`;
+    
+    axios.get(url)
+      .then(response => this.setState({ gifs: response.data.data }))
+  }
+```
+Ahora, hacemos una pequeña modificación en el método `render()` de `App.js`:
+```
+render() {
+    return (
+      <div className="App">
+       <SearchBar onTermChange={term => this.handleTermChange(term)}/>
+       <GifList gifs={this.state.gifs} />
+      </div>
+    );
+  }
+```
+y, lo único que necesitamos para que nuestro buscador funcione, es cambiar en `GifItem`:
+```
+<img src={gif.images.downsized.url} />
+```
+Y nuestro resultado eeeeees:
+
+<img src="./src/assets/screen4.png" alt="search result"/>
+
+Wiiiiii 🎉 Estoy contenta pero a la vez no jajajaj. Siento que falta darle más forma... y para eso... CSS 😍 !!!
